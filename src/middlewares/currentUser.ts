@@ -36,6 +36,6 @@ export async function setCurrentUser(req: Request, res: Response, next: NextFunc
         res.locals.user = user;
         next();
     } catch (err) {
-        return res.status(401).json({ message: msg.LOGIN_REQ });
+        next(err);
     }
 }

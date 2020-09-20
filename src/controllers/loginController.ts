@@ -22,6 +22,6 @@ export async function getAuthToken(req: Request, res: Response) {
         )
         return res.json({ token });
     } catch(err) {
-        return res.json(err);
+        throw err;
     }
 }
