@@ -2,9 +2,8 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
 import User, { IUser } from '../models/User';
-import config from '../../src/config';
-
-const message = 'Email or password incorrect';
+import config from '../config';
+import msg from '../constants/messages';
 
 /**
  * Takes the email and password provided in the body of the request and 
@@ -15,7 +14,7 @@ export async function getAuthToken(req: Request, res: Response) {
         let { email, password } = req.body;
         const user: IUser | null = await User.findOne({ email }).select('+password');
         if (!user || !await user.validatePassword(password)) {
-            return res.status(401).json({ message })
+            return res.status(401).json({ message: msg.INVALID_EMAIL_OR_PASS })
         }
         const token = jwt.sign(
             { userId: user.id },

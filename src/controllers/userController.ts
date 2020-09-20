@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 
 import User, { IUser } from '../models/User';
-
+import msg from '../constants/messages';
 
 /**
  * Endpoint for creating a new user. Assumes that request body validation
@@ -28,11 +28,10 @@ export async function createUser(req: Request, res: Response) {
 export async function deleteUser(req: Request, res: Response) {
     try {
         if (!await res.locals.user.validatePassword(req.body.password)) {
-            return res.status(401).json({ message: 'Incorrect password.' });
+            return res.status(401).json({ message: msg.INVALID_PASSWORD });
         }
         await User.findByIdAndDelete(res.locals.user._id);
-        // Delete any further user resources here.
-        return res.status(200).json({ message: 'User deleted.' });
+        return res.status(200).json({ message: msg.USER_DELETED });
     } catch (err) {
         return res.status(500).json(err);
     }
@@ -59,7 +58,7 @@ export async function updateUser(req: Request, res: Response) {
     try {
         let user: IUser = res.locals.user;
         if (!await user.validatePassword(req.body.currentPassword)) {
-            return res.status(401).json({ message: 'Invalid password.' });
+            return res.status(401).json({ message: msg.INVALID_PASSWORD });
         }
         if (req.body.newEmail) {
             user.email = req.body.newEmail;

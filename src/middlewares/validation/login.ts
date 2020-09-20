@@ -2,10 +2,11 @@ import { check } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
 
 import { validate } from '../../utils/validation';
+import msg from '../../constants/messages'
 
 const email = check('email')
                 .isEmail()
-                .withMessage('must be a valid email address.');
+                .withMessage(msg.INVALID_EMAIL);
 
 const password = check('password')
                     .isString();

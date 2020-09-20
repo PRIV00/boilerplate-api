@@ -3,33 +3,34 @@ import { Request, Response, NextFunction } from 'express';
 
 import User from '../../models/User';
 import { validate } from '../../utils/validation';
+import msg from '../../constants/messages';
 
 // Base email requirements
 const email = check('email')
                 .isEmail()
-                .withMessage('must be a valid email address.')
+                .withMessage(msg.INVALID_EMAIL)
                 .custom(email => {
                     return User.findOne({ email })
                         .then(user => {
-                            if (user) return Promise.reject('email is in use.');
+                            if (user) return Promise.reject('Email is in use.');
                         })
                 });
 
 // Base username requirements
 const username = check('username')
                     .isLength({ min: 4, max: 20 })
-                    .withMessage('username must be between 4 and 20 characters.')
+                    .withMessage('Username must be between 4 and 20 characters.')
                     .custom(username => {
                         return User.findOne({ username })
                             .then(user => {
-                                if (user) return Promise.reject('username is in use.');
+                                if (user) return Promise.reject('Username is in use.');
                             })
                     });
 
 // Base password requirements
 const password = check('password')
                     .isLength({ min: 6, max: 30 })
-                    .withMessage('password must be between 6 and 30 characters.');
+                    .withMessage('Password must be between 6 and 30 characters.');
 
 // Base confirmPassword requirements
 const confirmPassword = check('confirmPassword')
@@ -62,5 +63,11 @@ export async function validateUpdateRequest(req: Request, res: Response, next: N
         newEmail,
         currentPassword,
         newPassword
+    ]);
+}
+
+export async function validateDeleteRequest(req: Request, res: Response, next: NextFunction) {
+    await validate(req, res, next, [
+        password
     ]);
 }

@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 import { createUser, updateUser, getUser, deleteUser } from "../../src/controllers/userController";
 import User, { IUser } from "../../src/models/User";
 import { mockExpressObjects } from "../helpers";
+import msg from '../../src/constants/messages';
+
 
 
 describe('User Controller', () => {
@@ -75,7 +77,7 @@ describe('User Controller', () => {
         it('should give a user deleted message if delete was successful.', done => {
             deleteUser(req, res)
                 .then(result => {
-                    expect(result).to.have.property('message').which.equals('User deleted.');
+                    expect(result).to.have.property('message').which.equals(msg.USER_DELETED);
                     done();
                 })
                 .catch(err => done(err));
@@ -98,7 +100,7 @@ describe('User Controller', () => {
             req.body.password = 'badpassword';
             deleteUser(req, res)
                 .then(result => {
-                    expect(result).to.have.property('message').which.equals('Incorrect password.');
+                    expect(result).to.have.property('message').which.equals(msg.INVALID_PASSWORD);
                     done();
                 })
                 .catch(err => done(err));
@@ -140,7 +142,7 @@ describe('User Controller', () => {
             req.body.currentPassword = 'badPassword';
             updateUser(req, res)
                 .then(result => {
-                    expect(result).to.have.property('message').which.equals('Invalid password.');
+                    expect(result).to.have.property('message').which.equals(msg.INVALID_PASSWORD);
                     expect(res.statusCode).to.equal(401);
                     done();
                 })

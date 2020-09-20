@@ -56,8 +56,6 @@ userSchema.pre<IUser>('save', async function(next) {
     }
 });
 
-
-
 /**
  * Validates the user's password against the hashed password.
  * 

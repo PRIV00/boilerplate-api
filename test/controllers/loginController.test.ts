@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import User, { IUser } from "../../src/models/User";
 import { getAuthToken } from '../../src/controllers/loginController';
 import { mockExpressObjects } from "../helpers";
+import msg from '../../src/constants/messages';
 
 describe('Login Controller', () => {
     let req: Request;
@@ -43,7 +44,7 @@ describe('Login Controller', () => {
             }
             getAuthToken(req, res)
                 .then(result => {
-                    expect(result).to.have.property('message').which.equals('Email or password incorrect');
+                    expect(result).to.have.property('message').which.equals(msg.INVALID_EMAIL_OR_PASS);
                     expect(res.statusCode).to.equal(401);
                     done();
                 })
@@ -56,7 +57,7 @@ describe('Login Controller', () => {
             }
             getAuthToken(req, res)
                 .then(result => {
-                    expect(result).to.have.property('message').which.equals('Email or password incorrect');
+                    expect(result).to.have.property('message').which.equals(msg.INVALID_EMAIL_OR_PASS);
                     expect(res.statusCode).to.equal(401);
                     done();
                 })

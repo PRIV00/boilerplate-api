@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from 'express';
 import { mockExpressObjects } from '../helpers';
 import User, { IUser } from '../../src/models/User';
 import { setCurrentUser } from '../../src/middlewares/currentUser';
+import msg from '../../src/constants/messages';
 
 describe('Current User Middleware', () => {
     let req: Request;
@@ -37,7 +38,7 @@ describe('Current User Middleware', () => {
         it('should return error response if auth header is missing.', done => {
             setCurrentUser(req, res, next)
                 .then(result => {
-                    expect(result).to.have.property('message').which.equals('Authorization header missing.');
+                    expect(result).to.have.property('message').which.equals(msg.NO_AUTH_HEADER);
                     done();
                 })
                 .catch(err => done(err));
@@ -46,7 +47,7 @@ describe('Current User Middleware', () => {
             req.headers.authorization = "Bearer badtoken";
             setCurrentUser(req, res, next)
                 .then(result => {
-                    expect(result).to.have.property('message').which.equals('Login required.');
+                    expect(result).to.have.property('message').which.equals(msg.LOGIN_REQ);
                     done();
                 })
                 .catch(err => done(err));

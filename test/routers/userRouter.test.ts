@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { app } from '../../src/app';
 import User, { IUser } from '../../src/models/User';
 import config from '../../src/config';
+import msg from '../../src/constants/messages';
 
 describe('User Routes', () => {
     describe('POST /profile', () => {
@@ -123,6 +124,7 @@ describe('User Routes', () => {
                 .catch(err => done(err));
         });
     });
+
     describe('GET /profile', () => {
         let user: IUser;
         let authToken: any;
@@ -142,7 +144,7 @@ describe('User Routes', () => {
                 .get('/profile')
                 .set('Authorization', `Bearer notagoodtoken`)
                 .expect(401, {
-                    message: 'Login required.'
+                    message: msg.LOGIN_REQ
                 }, done);
         });
 
@@ -150,7 +152,7 @@ describe('User Routes', () => {
             request(app)
                 .get('/profile')
                 .expect(400, {
-                    message: 'Authorization header missing.'
+                    message: msg.NO_AUTH_HEADER
                 }, done);
         })
 
@@ -166,9 +168,145 @@ describe('User Routes', () => {
         });
     });
     describe('PUT /profile', () => {
-        it('should return an error message if authorization token is invalid.');
-        it('should update the user\'s email if provided and current paasword matches.');
-        it('should update the user\'s password if provided and password conf matches and current password matches.');
-        it('should return an error message response if current password is invalid.');
+        let currentPassword: string;
+        let newEmail: string;
+        let newPassword: string;
+        let authToken: string;
+        let user: IUser;
+
+        beforeEach(done => {
+            currentPassword = 'password';
+            newEmail = 'new_email@gmail.com';
+            newPassword = 'newPassword'
+            user = new User({
+                username: 'Test',
+                email: 'mail@mail.com',
+                password: currentPassword
+            })
+            authToken = jwt.sign({ userId: user.id }, config.KEY);
+            user.save(done);
+        });
+
+        it('should return an error message if auth header is missing', done => {
+            request(app)
+                .put('/profile')
+                .send({
+                    newEmail,
+                    newPassword,
+                    currentPassword
+                })
+                .expect(400, {
+                    message: msg.NO_AUTH_HEADER
+                }, done)
+        });
+        it('should return an error message if authorization token is invalid.', done => {
+            request(app)
+                .put('/profile')
+                .set('Authorization', 'Bearer badtoken')
+                .send({
+                    newEmail,
+                    newPassword,
+                    currentPassword
+                })
+                .expect(401, {
+                    message: msg.LOGIN_REQ
+                }, done);
+        })
+        it('should update the user\'s email if provided and current password matches.', done => {
+            request(app)
+                .put('/profile')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    newEmail,
+                    currentPassword
+                })
+                .expect(200, {
+                    _id: user.id,
+                    username: user.username,
+                    email: newEmail
+                }, done);
+        });
+        it('should update the user\'s password if provided and password conf matches and current password matches.', done => {
+            request(app)
+                .put('/profile')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    newPassword,
+                    currentPassword
+                })
+                .expect(200, {
+                    _id: user.id,
+                    username: user.username,
+                    email: user.email
+                })
+                .then(() => {
+                    return User.findById(user.id).select('+password');
+                })
+                .then((user: IUser | null) => {
+                    expect(user).to.not.be.null;
+                    return user!.validatePassword(newPassword);
+                })
+                .then((result: boolean) => {
+                    expect(result).to.be.true;
+                    done();
+                })
+                .catch(err => done(err));
+        });
+        it('should return an error message response if current password is invalid.', done => {
+            request(app)
+                .put('/profile')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    newEmail,
+                    currentPassword: 'badpassword'
+                })
+                .expect(401, {
+                    message: msg.INVALID_PASSWORD
+                }, done);
+        });
+    });
+
+    describe('DELETE /profile', () => {
+        let user: IUser;
+        let authToken: string;
+        let password: string
+
+        beforeEach(done => {
+            password = 'password';
+            user = new User({
+                username: 'Test',
+                email: 'mail@mail.com',
+                password
+            })
+            authToken = jwt.sign({ userId: user.id }, config.KEY);
+            user.save(done);
+        });
+
+        it('should delete the user if currentPassword is valid and auth header is valid.', done => {
+            request(app)
+                .delete('/profile')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({ password })
+                .expect(200, {
+                    message: msg.USER_DELETED
+                }, done);
+        });
+        it('should should return an error message if auth header is missing.', done => {
+            request(app)
+                .delete('/profile')
+                .send({ password })
+                .expect(400, {
+                    message: msg.NO_AUTH_HEADER
+                }, done)
+        });
+        it('should return an error message if auth token is invalid.', done => {
+            request(app)
+                .delete('/profile')
+                .set('Authorization', 'Bearer badtoken')
+                .send({ password })
+                .expect(401, {
+                    message: msg.LOGIN_REQ
+                }, done);
+        });
     });
 });
